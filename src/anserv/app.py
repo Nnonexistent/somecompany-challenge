@@ -3,13 +3,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+import tempfile
 import uuid
-from typing import List
+from typing import Any, Dict, List
 
 from const import VisTypes
 from db.conf import get_db
 from db.orm import EntryOrm, UserOrm, VisualizationOrm
-from fastapi import Depends, FastAPI, Response, UploadFile, status
+from fastapi import Depends, FastAPI, File, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
 from models import EntrySummary, Visualization
 from pydantic import BaseModel
@@ -23,7 +24,7 @@ app = FastAPI()
 # DEBUG:
 from db.conf import Base, engine
 
-USER_ID = uuid.UUID('0*32')
+USER_ID = uuid.UUID('0' * 32)
 Base.metadata.create_all(engine)
 db = next(iter(get_db()))
 db.add(UserOrm(id=USER_ID, name='Test User'))
@@ -32,12 +33,17 @@ db.commit()
 
 
 @app.post('/entries/', status_code=201)
-async def entry_create(uploaded: UploadFile, db: Session = Depends(get_db)) -> EntrySummary:
+async def entry_create(payload: UploadFile, db: Session = Depends(get_db)) -> EntrySummary:
     # TODO: auth
-    try:
-        return parse_uploaded_file(uploaded, USER_ID, db)
-    except InvalidFile:
-        raise HTTPException(422)
+    with tempfile.NamedTemporaryFile(mode='wb', suffix=payload.filename) as tmp:
+        # TODO: optimizations
+        tmp.write(await payload.read())
+        tmp.seek(0)
+
+        try:
+            return parse_uploaded_file(tmp.name, USER_ID, db)
+        except InvalidFile:
+            raise HTTPException(422)
 
 
 @app.get('/entries/')
@@ -70,13 +76,13 @@ async def entry_remove(entry_id: uuid.UUID, db: Session = Depends(get_db)) -> Re
     return Response(status.HTTP_204_NO_CONTENT)
 
 
-class EntryCreatePayload(BaseModel):
+class VisCreatePayload(BaseModel, frozen=True):
     entry_id: uuid.UUID
     type: VisTypes
 
 
 @app.post('/vis/')
-async def vis_create(payload: EntryCreatePayload, db: Session = Depends(get_db)) -> Visualization:
+async def vis_create(payload: VisCreatePayload, db: Session = Depends(get_db)) -> Visualization:
     # TODO: auth
 
     vis = VisualizationOrm(

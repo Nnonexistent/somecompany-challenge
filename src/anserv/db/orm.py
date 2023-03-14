@@ -2,8 +2,8 @@ import datetime
 import uuid
 from typing import List
 
-from const import VisTypes
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Uuid
+from const import VisTypes, SUMMARY_FUNCTIONS, SUMMARY_FIELDS
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Uuid, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .conf import Base
@@ -32,6 +32,27 @@ class EntryOrm(Base):
         back_populates='entry', cascade='all, delete-orphan'
     )
 
+    date_start: Mapped[datetime.date] = mapped_column(Date())
+    date_end: Mapped[datetime.date] = mapped_column(Date())
+
+    merge_time_min: Mapped[int] = mapped_column(Integer())
+    merge_time_max: Mapped[int] = mapped_column(Integer())
+    merge_time_mean: Mapped[float] = mapped_column(Float())
+    merge_time_median: Mapped[float] = mapped_column(Float())
+    merge_time_quantile_10: Mapped[float] = mapped_column(Float())
+    merge_time_quantile_90: Mapped[float] = mapped_column(Float())
+    merge_time_mode: Mapped[int] = mapped_column(Integer())
+    merge_time_std: Mapped[float] = mapped_column(Float())
+
+    review_time_min: Mapped[int] = mapped_column(Integer())
+    review_time_max: Mapped[int] = mapped_column(Integer())
+    review_time_mean: Mapped[float] = mapped_column(Float())
+    review_time_median: Mapped[float] = mapped_column(Float())
+    review_time_quantile_10: Mapped[float] = mapped_column(Float())
+    review_time_quantile_90: Mapped[float] = mapped_column(Float())
+    review_time_mode: Mapped[int] = mapped_column(Integer())
+    review_time_std: Mapped[float] = mapped_column(Float())
+
 
 class AtomOrm(Base):
     __tablename__ = 'atom'
@@ -57,3 +78,8 @@ class VisualizationOrm(Base):
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
 
     path: Mapped[str] = mapped_column(String(255))
+
+
+for field_name in SUMMARY_FIELDS:
+    for suffix in SUMMARY_FUNCTIONS.keys():
+        assert hasattr(EntryOrm, f'{field_name}_{suffix}')

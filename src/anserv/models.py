@@ -2,47 +2,54 @@ from __future__ import annotations
 
 import datetime
 import uuid
-from typing import List
 
-from const import VisTypes
+from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, VisTypes
 from pydantic import BaseModel
 
+UserId = uuid.UUID
+EntryID = uuid.UUID
+AtomId = uuid.UUID
 
-class User(BaseModel, frozen=True):
-    id: uuid.UUID
+
+class User(BaseModel):
+    id: UserId
     name: str
 
-    entries: List[EntrySummary]
-
     class Config:
+        frozen = True
         orm_mode = True
 
 
-class EntrySummary(BaseModel, frozen=True):
-    id: uuid.UUID
+class EntrySummary(BaseModel):
+    id: EntryID
 
-    user: User
+    date_start: datetime.date
+    date_end: datetime.date
 
-    atoms: List[Atom]
-    visualizations: List[Visualization]
+    merge_time_min: int
+    merge_time_max: int
+    merge_time_mean: float
+    merge_time_median: float
+    merge_time_quantile_10: float
+    merge_time_quantile_90: float
+    merge_time_mode: int
+    merge_time_std: float
+
+    review_time_min: int
+    review_time_max: int
+    review_time_mean: float
+    review_time_median: float
+    review_time_quantile_10: float
+    review_time_quantile_90: float
+    review_time_mode: int
+    review_time_std: float
 
     class Config:
+        frozen = True
         orm_mode = True
 
 
-class Atom(BaseModel, frozen=True):
-    entry: EntrySummary
-
-    date: datetime.date
-    team: str
-    review_time: int
-    merge_time: int
-
-    class Config:
-        orm_mode = True
-
-
-class Visualization(BaseModel, frozen=True):
+class Visualization(BaseModel):
     id: uuid.UUID
 
     entry: EntrySummary
@@ -50,8 +57,10 @@ class Visualization(BaseModel, frozen=True):
     type: VisTypes
 
     class Config:
+        frozen = True
         orm_mode = True
 
 
-User.update_forward_refs()
-EntrySummary.update_forward_refs()
+for field_name in SUMMARY_FIELDS:
+    for suffix in SUMMARY_FUNCTIONS.keys():
+        assert f'{field_name}_{suffix}' in EntrySummary.__fields__
