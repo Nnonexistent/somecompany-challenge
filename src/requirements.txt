@@ -2,6 +2,8 @@ factory_boy
 pytest-randomly
 pytest-xdist
 pytest
+pandas-stubs
+pyarrow-stubs
 
 numpy
 sqlalchemy[asyncio]

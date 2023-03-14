@@ -4,11 +4,9 @@ from typing import List
 
 from const import VisTypes
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Uuid
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-
-class Base(DeclarativeBase):
-    pass
+from .conf import Base
 
 
 class UserOrm(Base):
