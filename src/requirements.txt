@@ -1,0 +1,14 @@
+factory_boy
+pytest-randomly
+pytest-xdist
+pytest
+
+numpy
+sqlalchemy[asyncio]
+asyncpg
+fastapi
+python-multipart
+uvicorn
+python-dotenv
+pyarrow
+pandas

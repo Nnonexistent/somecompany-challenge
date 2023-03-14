@@ -1,0 +1,14 @@
+[tool.isort]
+profile = "black"
+line_length = 119
+src_paths = ['src']
+
+
+[tool.blue]
+line-length = 119
+
+
+[tool.mypy]
+check_untyped_defs = true
+strict = true
+plugins = ["pydantic.mypy"]
