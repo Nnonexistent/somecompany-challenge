@@ -4,6 +4,8 @@ pytest-xdist
 pytest
 pandas-stubs
 pyarrow-stubs
+types-python-jose
+types-passlib
 
 numpy
 sqlalchemy[asyncio]
@@ -14,3 +16,5 @@ uvicorn
 python-dotenv
 pyarrow
 pandas
+python-jose[cryptography]
+passlib[bcrypt]

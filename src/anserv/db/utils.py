@@ -1,6 +1,7 @@
 import json
 from typing import Any, Generator
 
+from conf import SQLALCHEMY_DATABASE_URL
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -12,8 +13,6 @@ def pydantic_friendly_json_serializer(obj: Any) -> str:
         return o
     return json.dumps(obj, default=_pydantic_default)
 
-
-SQLALCHEMY_DATABASE_URL = 'sqlite+pysqlite:///:memory:'
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

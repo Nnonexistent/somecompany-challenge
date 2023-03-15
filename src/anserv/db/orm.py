@@ -7,7 +7,7 @@ from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, Stri
 from sqlalchemy.dialects.sqlite import JSON  # TODO: switch to postgres
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .conf import Base
+from .utils import Base
 
 
 class UserOrm(Base):
@@ -15,6 +15,7 @@ class UserOrm(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(), primary_key=True, insert_default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String())
+    hashed_password: Mapped[str] = mapped_column(String())
 
     entries: Mapped[List['EntryOrm']] = relationship(back_populates='user', cascade='all, delete-orphan')
 

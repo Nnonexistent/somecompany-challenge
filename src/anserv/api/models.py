@@ -2,12 +2,20 @@ from __future__ import annotations
 
 import datetime
 import uuid
-from typing import List
+from typing import List, Union, Literal
 
 from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS
 from pydantic import BaseModel, Field
 from vis.output import AnyOutputEntry
 from vis.vis_types import AnyVisType
+
+
+class LoginPayload(BaseModel):
+    username: str
+    password: str
+
+    class Config:
+        frozen = True
 
 
 class EntrySummary(BaseModel):
