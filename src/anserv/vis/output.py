@@ -5,8 +5,9 @@ from const import MeasureTypes
 from pydantic import BaseModel
 
 
-class BaseOutputEntry(BaseModel, frozen=True):
-    pass
+class BaseOutputEntry(BaseModel):
+    class Config:
+        frozen = True
 
 
 class DateByTypeOutputEntry(BaseOutputEntry):
@@ -23,10 +24,10 @@ class ReviewOverMergeOutputEntry(BaseOutputEntry):
     date: datetime.date
 
 
-class ReviewMergeRatioEntry(BaseOutputEntry):
+class ReviewMergeRatioOutputEntry(BaseOutputEntry):
     value: int
     type: MeasureTypes
     team: str
 
 
-AnyOutputEntry = Union[DateByTypeOutputEntry, ReviewOverMergeOutputEntry, ReviewMergeRatioEntry]
+AnyOutputEntry = Union[DateByTypeOutputEntry, ReviewOverMergeOutputEntry, ReviewMergeRatioOutputEntry]

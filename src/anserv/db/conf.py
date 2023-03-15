@@ -1,11 +1,25 @@
-from typing import Generator
+import json
+from typing import Any, Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
+
+def pydantic_friendly_json_serializer(obj: Any) -> str:
+    def _pydantic_default(o: Any) -> Any:
+        if hasattr(o, 'json') and callable(o.json):
+            return o.json()
+        return o
+    return json.dumps(obj, default=_pydantic_default)
+
+
 SQLALCHEMY_DATABASE_URL = 'sqlite+pysqlite:///:memory:'
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={'check_same_thread': False},
+    json_serializer=pydantic_friendly_json_serializer,
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

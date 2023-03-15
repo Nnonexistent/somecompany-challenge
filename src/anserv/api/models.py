@@ -39,10 +39,15 @@ class EntrySummary(BaseModel):
         orm_mode = True
 
 
+class VisualizationCreatePayload(BaseModel, frozen=True):
+    entry_id: uuid.UUID
+    options: AnyVisType = Field(discriminator='vis_type')
+
+
 class Visualization(BaseModel):
     id: uuid.UUID
 
-    entry: EntrySummary
+    entry_id: uuid.UUID
     dt: datetime.datetime
     is_public: bool
     options: AnyVisType = Field(discriminator='vis_type')
@@ -53,7 +58,7 @@ class Visualization(BaseModel):
 
 
 class VisualizationWithData(Visualization):
-    data = List[AnyOutputEntry]
+    data: List[AnyOutputEntry]
 
     class Config:
         frozen = True

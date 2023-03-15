@@ -21,7 +21,7 @@ class ChartTypes(str, enum.Enum):
     PIE = 'pie'
 
 
-class CSVColumns(str, enum.Enum):
+class Columns(str, enum.Enum):
     REVIEW_TIME = 'review_time'
     TEAM = 'team'
     DATE = 'date'
@@ -33,13 +33,18 @@ class MeasureTypes(str, enum.Enum):
     MERGE = 'merge'
 
 
-PA_COLUMN_TYPES = {
-    CSVColumns.REVIEW_TIME: pa.int32(),
-    CSVColumns.TEAM: pa.string(),
-    CSVColumns.DATE: pa.date32(),
-    CSVColumns.MERGE_TIME: pa.int32(),
+MT2COL = {
+    MeasureTypes.REVIEW: Columns.REVIEW_TIME,
+    MeasureTypes.MERGE: Columns.MERGE_TIME,
 }
-SUMMARY_FIELDS = [CSVColumns.MERGE_TIME, CSVColumns.REVIEW_TIME]
+
+PA_COLUMN_TYPES = {
+    Columns.REVIEW_TIME: pa.int32(),
+    Columns.TEAM: pa.string(),
+    Columns.DATE: pa.date32(),
+    Columns.MERGE_TIME: pa.int32(),
+}
+SUMMARY_FIELDS = [Columns.MERGE_TIME, Columns.REVIEW_TIME]
 SUMMARY_FUNCTIONS: Dict[str, Callable[[pd.Series[int]], Union[int, float]]] = {
     'min': lambda s: int(s.min()),
     'max': lambda s: int(s.max()),

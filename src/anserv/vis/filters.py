@@ -12,8 +12,11 @@ class DataFilterTypes(str, enum.Enum):
     DATE_RANGE = 'date-range'
 
 
-class BaseDataFilter(BaseModel, frozen=True):
+class BaseDataFilter(BaseModel):
     filter_type: DataFilterTypes
+
+    class Config:
+        frozen = True
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         raise NotImplementedError
@@ -34,5 +37,5 @@ AnyDataFilter = Union[TeamsDataFilter, DateRangeDataFilter]
 
 
 # check that all data filter types has relevant model
-assert all(c.__fields__['type'].default in DataFilterTypes for c in typing.get_args(AnyDataFilter))
+assert all(c.__fields__['filter_type'].default in DataFilterTypes for c in typing.get_args(AnyDataFilter))
 assert len(DataFilterTypes) == len(typing.get_args(AnyDataFilter))

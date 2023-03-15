@@ -7,16 +7,14 @@ import tempfile
 import uuid
 from typing import List
 
-from api.models import EntrySummary, Visualization, VisualizationWithData
+from api.models import EntrySummary, Visualization, VisualizationCreatePayload, VisualizationWithData
 from api.services import InvalidFile, df_for_entry, parse_uploaded_file
 from db.conf import get_db
 from db.orm import EntryOrm, UserOrm, VisualizationOrm
 from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
-from pydantic import BaseModel, Field
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
-from vis.vis_types import AnyVisType
 
 app = FastAPI()
 
@@ -76,19 +74,11 @@ async def entry_remove(entry_id: uuid.UUID, db: Session = Depends(get_db)) -> Re
     return Response(status.HTTP_204_NO_CONTENT)
 
 
-class VisCreatePayload(BaseModel, frozen=True):
-    entry_id: uuid.UUID
-    options: AnyVisType = Field(discriminator='vis_type')
-
-
 @app.post('/vis/')
-async def vis_create(payload: VisCreatePayload, db: Session = Depends(get_db)) -> Visualization:
+async def vis_create(payload: VisualizationCreatePayload, db: Session = Depends(get_db)) -> Visualization:
     # TODO: auth
 
-    vis = VisualizationOrm(
-        entry_id=payload.entry_id,
-        options=payload.dict(),
-    )
+    vis = VisualizationOrm(**payload.dict())
     db.add(vis)
     db.commit()
     db.refresh(vis)
@@ -104,7 +94,7 @@ async def vis_list(db: Session = Depends(get_db)) -> List[Visualization]:
     return out
 
 
-@app.get('/entries/{vis_id}/')
+@app.get('/vis/{vis_id}/')
 async def vis_detail(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> VisualizationWithData:
     # TODO: auth
     try:
@@ -118,7 +108,7 @@ async def vis_detail(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> Visual
     return VisualizationWithData(data=output, **vis_model.dict())
 
 
-@app.delete('/entries/{vis_id}/')
+@app.delete('/vis/{vis_id}/')
 async def vis_remove(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> Response:
     # TODO: auth
     n = db.query(VisualizationOrm).filter(VisualizationOrm.id == vis_id).delete()
