@@ -9,22 +9,9 @@ from pydantic import BaseModel, Field
 from vis.output import AnyOutputEntry
 from vis.vis_types import AnyVisType
 
-UserId = uuid.UUID
-EntryID = uuid.UUID
-AtomId = uuid.UUID
-
-
-class User(BaseModel):
-    id: UserId
-    name: str
-
-    class Config:
-        frozen = True
-        orm_mode = True
-
 
 class EntrySummary(BaseModel):
-    id: EntryID
+    id: uuid.UUID
 
     date_start: datetime.date
     date_end: datetime.date
@@ -52,7 +39,7 @@ class EntrySummary(BaseModel):
         orm_mode = True
 
 
-class Visualization(BaseModel, frozen=True):
+class Visualization(BaseModel):
     id: uuid.UUID
 
     entry: EntrySummary
@@ -67,6 +54,10 @@ class Visualization(BaseModel, frozen=True):
 
 class VisualizationWithData(Visualization):
     data = List[AnyOutputEntry]
+
+    class Config:
+        frozen = True
+        orm_mode = False
 
 
 for field_name in SUMMARY_FIELDS:

@@ -7,13 +7,13 @@ import tempfile
 import uuid
 from typing import List
 
+from api.models import EntrySummary, Visualization, VisualizationWithData
+from api.services import InvalidFile, df_for_entry, parse_uploaded_file
 from db.conf import get_db
 from db.orm import EntryOrm, UserOrm, VisualizationOrm
 from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
-from models import EntrySummary, Visualization, VisualizationWithData
 from pydantic import BaseModel, Field
-from services import InvalidFile, parse_uploaded_file
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 from vis.vis_types import AnyVisType
@@ -113,7 +113,7 @@ async def vis_detail(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> Visual
         raise HTTPException(404)
 
     vis_model = Visualization.from_orm(vis)
-    df = df_for_entry(vis.entry)
+    df = df_for_entry(vis.entry_id, db)
     output = vis_model.options.apply(df)
     return VisualizationWithData(data=output, **vis_model.dict())
 

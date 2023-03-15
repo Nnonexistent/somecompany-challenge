@@ -2,7 +2,7 @@ import datetime
 import uuid
 from typing import Any, Dict, List
 
-from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, ChartTypes, VisTypes
+from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, CSVColumns
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Uuid
 from sqlalchemy.dialects.sqlite import JSON  # TODO: switch to postgres
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -83,3 +83,6 @@ class VisualizationOrm(Base):
 for field_name in SUMMARY_FIELDS:
     for suffix in SUMMARY_FUNCTIONS.keys():
         assert hasattr(EntryOrm, f'{field_name}_{suffix}')
+
+for col in CSVColumns:
+    assert hasattr(AtomOrm, col)

@@ -1,13 +1,18 @@
 import uuid
-from typing import Dict, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 import pandas as pd
 import pyarrow as pa
 from const import PA_COLUMN_TYPES, SUMMARY_FIELDS, SUMMARY_FUNCTIONS, CSVColumns
 from db.orm import AtomOrm, EntryOrm
-from models import EntrySummary
 from pyarrow import csv
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from .models import EntrySummary
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
 class InvalidFile(Exception):
@@ -69,3 +74,12 @@ def calc_summary(df: pd.DataFrame) -> Dict[str, Union[int, float]]:
             out[f'{field_name}_{suffix}'] = func(series)
 
     return out
+
+
+def df_for_entry(entry_id: uuid.UUID, db: Session) -> pd.DataFrame:
+    cols: List[InstrumentedAttribute[Any]] = [getattr(AtomOrm, col_name) for col_name in CSVColumns]
+
+    return pd.read_sql_query(
+        sql=select(*cols).where(AtomOrm.entry_id == entry_id),
+        con=db.connection(),
+    )
