@@ -1,9 +1,10 @@
 import datetime
 import uuid
-from typing import List
+from typing import Any, Dict, List
 
-from const import VisTypes, SUMMARY_FUNCTIONS, SUMMARY_FIELDS
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Uuid, Float
+from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, ChartTypes, VisTypes
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Uuid
+from sqlalchemy.dialects.sqlite import JSON  # TODO: switch to postgres
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .conf import Base
@@ -74,10 +75,9 @@ class VisualizationOrm(Base):
     entry: Mapped['EntryOrm'] = relationship(back_populates='visualizations')
     entry_id = mapped_column(ForeignKey('entry.id'), primary_key=True)
     dt: Mapped[datetime.datetime] = mapped_column(DateTime(), insert_default=datetime.datetime.now)
-    type: Mapped[VisTypes] = mapped_column(Integer)
-    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_public: Mapped[bool] = mapped_column(Boolean(), default=False)
 
-    path: Mapped[str] = mapped_column(String(255))
+    options: Mapped[Dict[str, Any]] = mapped_column(JSON())
 
 
 for field_name in SUMMARY_FIELDS:

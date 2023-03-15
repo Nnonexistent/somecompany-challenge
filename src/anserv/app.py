@@ -5,18 +5,18 @@ load_dotenv()
 
 import tempfile
 import uuid
-from typing import Any, Dict, List
+from typing import List
 
-from const import VisTypes
 from db.conf import get_db
 from db.orm import EntryOrm, UserOrm, VisualizationOrm
-from fastapi import Depends, FastAPI, File, Response, UploadFile, status
+from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
-from models import EntrySummary, Visualization
-from pydantic import BaseModel
+from models import EntrySummary, Visualization, VisualizationWithData
+from pydantic import BaseModel, Field
 from services import InvalidFile, parse_uploaded_file
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
+from vis.vis_types import AnyVisType
 
 app = FastAPI()
 
@@ -78,7 +78,7 @@ async def entry_remove(entry_id: uuid.UUID, db: Session = Depends(get_db)) -> Re
 
 class VisCreatePayload(BaseModel, frozen=True):
     entry_id: uuid.UUID
-    type: VisTypes
+    options: AnyVisType = Field(discriminator='vis_type')
 
 
 @app.post('/vis/')
@@ -86,9 +86,8 @@ async def vis_create(payload: VisCreatePayload, db: Session = Depends(get_db)) -
     # TODO: auth
 
     vis = VisualizationOrm(
-        user_id=USER_ID,
         entry_id=payload.entry_id,
-        type=payload.type,
+        options=payload.dict(),
     )
     db.add(vis)
     db.commit()
@@ -106,14 +105,17 @@ async def vis_list(db: Session = Depends(get_db)) -> List[Visualization]:
 
 
 @app.get('/entries/{vis_id}/')
-async def vis_detail(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> Visualization:
+async def vis_detail(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> VisualizationWithData:
     # TODO: auth
     try:
         vis = db.query(VisualizationOrm).filter(VisualizationOrm.id == vis_id).one()
     except NoResultFound:
         raise HTTPException(404)
-    else:
-        return Visualization.from_orm(vis)
+
+    vis_model = Visualization.from_orm(vis)
+    df = df_for_entry(vis.entry)
+    output = vis_model.options.apply(df)
+    return VisualizationWithData(data=output, **vis_model.dict())
 
 
 @app.delete('/entries/{vis_id}/')
