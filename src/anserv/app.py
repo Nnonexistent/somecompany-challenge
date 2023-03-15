@@ -116,3 +116,30 @@ async def vis_remove(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> Respon
         raise HTTPException(404)
     assert n == 1
     return Response(status.HTTP_204_NO_CONTENT)
+
+
+
+@app.put('/vis/{vis_id}/share/')
+async def vis_share(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> Response:
+    # TODO: auth
+    try:
+        vis = db.query(VisualizationOrm).filter(VisualizationOrm.id == vis_id).one()
+    except NoResultFound:
+        raise HTTPException(404)
+
+    vis.is_public = True
+    db.commit()
+    return Response()
+
+
+@app.delete('/vis/{vis_id}/share/')
+async def vis_unshare(vis_id: uuid.UUID, db: Session = Depends(get_db)) -> Response:
+    # TODO: auth
+    try:
+        vis = db.query(VisualizationOrm).filter(VisualizationOrm.id == vis_id).one()
+    except NoResultFound:
+        raise HTTPException(404)
+
+    vis.is_public = False
+    db.commit()
+    return Response()
