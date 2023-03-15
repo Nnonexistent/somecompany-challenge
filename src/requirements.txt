@@ -1,11 +1,12 @@
 factory_boy
 pytest-randomly
-pytest-xdist
 pytest
 pandas-stubs
 pyarrow-stubs
 types-python-jose
 types-passlib
+httpx
+anyio
 
 alembic
 sqlalchemy[asyncio] > 2

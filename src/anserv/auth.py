@@ -14,8 +14,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
-oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl='auth/token', auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token/')
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl='auth/token/', auto_error=False)
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 

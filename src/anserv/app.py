@@ -13,15 +13,18 @@ from db.orm import EntryOrm, UserOrm, VisualizationOrm
 from db.utils import get_db
 from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 app = FastAPI()
 
+@app.get('/')
+def root() -> Response:
+    return Response()
 
-app.post('/auth/token', response_model=Token)(login)  # FIXME: registration
+
+app.post('/auth/token/', response_model=Token)(login)  # FIXME: registration
 
 
 @app.post('/entries/', status_code=201)

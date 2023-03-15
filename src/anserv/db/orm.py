@@ -14,7 +14,7 @@ class UserOrm(Base):
     __tablename__ = 'user'
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(), primary_key=True, insert_default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String())
+    name: Mapped[str] = mapped_column(String(), unique=True)
     hashed_password: Mapped[str] = mapped_column(String())
 
     entries: Mapped[List['EntryOrm']] = relationship(back_populates='user', cascade='all, delete-orphan')
