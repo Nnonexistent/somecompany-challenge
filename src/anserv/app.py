@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 app = FastAPI()
 
+
 @app.get('/')
 def root() -> Response:
     return Response()
@@ -40,9 +41,14 @@ async def entry_create(
         tmp.seek(0)
 
         try:
-            return await parse_uploaded_file(tmp.name, user.id, db)
+            entry = parse_uploaded_file(tmp.name, user.id)
         except InvalidFile:
             raise HTTPException(422)
+
+    db.add(entry)
+    await db.commit()
+
+    return EntrySummary.from_orm(entry)
 
 
 @app.get('/entries/')
@@ -76,11 +82,14 @@ async def entry_remove(
     db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> Response:
-    res = await db.execute(delete(EntryOrm).where(EntryOrm.user_id == user.id, EntryOrm.id == entry_id))
-    if res.rowcount == 0:
+    res = await db.execute(select(EntryOrm).where(EntryOrm.user_id == user.id, EntryOrm.id == entry_id))
+    row = res.one_or_none()
+    if not row:
         raise HTTPException(404)
-    assert res.rowcount == 1
-    return Response(status.HTTP_204_NO_CONTENT)
+
+    await db.delete(row[0])
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.post('/vis/')
@@ -155,10 +164,13 @@ async def vis_remove(
         )
     )
 
-    if res.rowcount == 0:
+    row = res.one_or_none()
+    if not row:
         raise HTTPException(404)
-    assert res.rowcount == 1
-    return Response(status.HTTP_204_NO_CONTENT)
+    await db.delete(row[0])
+    await db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.put('/vis/{vis_id}/share/')

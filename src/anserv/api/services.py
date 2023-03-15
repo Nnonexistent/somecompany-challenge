@@ -1,16 +1,13 @@
 import uuid
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union, BinaryIO
 
 import pandas as pd
 import pyarrow as pa
 from const import PA_COLUMN_TYPES, SUMMARY_FIELDS, SUMMARY_FUNCTIONS, Columns
 from db.orm import AtomOrm, EntryOrm
 from pyarrow import csv
-from sqlalchemy import Connection, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
-
-from .models import EntrySummary
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -20,13 +17,12 @@ class InvalidFile(Exception):
     pass
 
 
-async def parse_uploaded_file(fp: str, user_id: uuid.UUID, db: AsyncSession) -> EntrySummary:
+def parse_uploaded_file(fp: Union[str, BinaryIO], user_id: uuid.UUID) -> EntryOrm:
     opts = pa.csv.ConvertOptions(column_types=PA_COLUMN_TYPES)
     try:
         df = csv.read_csv(fp, convert_options=opts).to_pandas(date_as_object=False)
     except ValueError as e:
         raise InvalidFile(e)
-
     _validate_data_frame(df)
 
     summary_stats = calc_summary(df)
@@ -42,15 +38,15 @@ async def parse_uploaded_file(fp: str, user_id: uuid.UUID, db: AsyncSession) -> 
                 review_time=row[Columns.REVIEW_TIME],
             )
         )
-    db.add(entry)
-    await db.commit()
-
-    return EntrySummary.from_orm(entry)
+    return entry
 
 
 def _validate_data_frame(df: pd.DataFrame) -> None:
     if df.size == 0:
         raise InvalidFile('No data')
+
+    if df.duplicated([Columns.DATE, Columns.TEAM]).any():
+        raise InvalidFile('Duplicated values')
 
     if not set(df.keys()).issuperset(Columns):
         raise InvalidFile('Invalid columns')
