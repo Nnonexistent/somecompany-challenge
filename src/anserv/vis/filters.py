@@ -3,6 +3,7 @@ import enum
 import typing
 from typing import List, Literal, Optional, Union
 
+from const import Columns
 import pandas as pd
 from pydantic import BaseModel, Field
 
@@ -24,13 +25,27 @@ class BaseDataFilter(BaseModel):
 
 class TeamsDataFilter(BaseDataFilter):
     filter_type: Literal[DataFilterTypes.TEAMS] = DataFilterTypes.TEAMS
+
     teams: List[str] = Field(default_factory=list)
+
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        if not self.teams:
+            return df
+        return df[df[Columns.TEAM].isin(self.teams)]
 
 
 class DateRangeDataFilter(BaseDataFilter):
     filter_type: Literal[DataFilterTypes.DATE_RANGE] = DataFilterTypes.DATE_RANGE
+
     start_date: Optional[datetime.date]
     end_date: Optional[datetime.date]
+
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.start_date:
+            df = df[df[Columns.DATE] >= self.start_date]
+        if self.end_date:
+            df = df[df[Columns.DATE] <= self.end_date]
+        return df
 
 
 AnyDataFilter = Union[TeamsDataFilter, DateRangeDataFilter]
