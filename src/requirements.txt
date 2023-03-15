@@ -7,8 +7,8 @@ pyarrow-stubs
 types-python-jose
 types-passlib
 
-numpy
-sqlalchemy[asyncio]
+alembic
+sqlalchemy[asyncio] > 2
 asyncpg
 fastapi
 python-multipart

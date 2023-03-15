@@ -6,7 +6,8 @@ import pyarrow as pa
 from const import PA_COLUMN_TYPES, SUMMARY_FIELDS, SUMMARY_FUNCTIONS, Columns
 from db.orm import AtomOrm, EntryOrm
 from pyarrow import csv
-from sqlalchemy import select
+from sqlalchemy import Connection, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from .models import EntrySummary
@@ -19,7 +20,7 @@ class InvalidFile(Exception):
     pass
 
 
-def parse_uploaded_file(fp: str, user_id: uuid.UUID, db: Session) -> EntrySummary:
+async def parse_uploaded_file(fp: str, user_id: uuid.UUID, db: AsyncSession) -> EntrySummary:
     opts = pa.csv.ConvertOptions(column_types=PA_COLUMN_TYPES)
     try:
         df = csv.read_csv(fp, convert_options=opts).to_pandas(date_as_object=False)
@@ -42,7 +43,7 @@ def parse_uploaded_file(fp: str, user_id: uuid.UUID, db: Session) -> EntrySummar
             )
         )
     db.add(entry)
-    db.commit()
+    await db.commit()
 
     return EntrySummary.from_orm(entry)
 
@@ -76,11 +77,14 @@ def calc_summary(df: pd.DataFrame) -> Dict[str, Union[int, float]]:
     return out
 
 
-def df_for_entry(entry_id: uuid.UUID, db: Session) -> pd.DataFrame:
-    cols: List[InstrumentedAttribute[Any]] = [getattr(AtomOrm, col_name) for col_name in Columns]
+def _read_sql(con, sql, **kwargs) -> pd.DataFrame:  # FIXME: typing
+    return pd.read_sql_query(sql, con, **kwargs)
 
-    return pd.read_sql_query(
+
+async def df_for_entry(entry_id: uuid.UUID, db: AsyncSession) -> pd.DataFrame:
+    cols: List[InstrumentedAttribute[Any]] = [getattr(AtomOrm, col_name) for col_name in Columns]
+    return await db.run_sync(
+        _read_sql,
         sql=select(*cols).where(AtomOrm.entry_id == entry_id),
-        con=db.connection(),
         parse_dates=[Columns.DATE],
     )

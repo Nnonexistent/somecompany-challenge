@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Literal, Optional, Union, Any
+from typing import Any, Dict, Literal, Optional, Union
 
 from conf import AUTH_ALGORITHM, AUTH_SECRET_KEY, AUTH_TOKEN_EXPIRE_MINUTES
 from db.orm import UserOrm
@@ -10,8 +10,9 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl='auth/token', auto_error=False)
@@ -31,13 +32,17 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def authenticate_user(db: Session, username: str, password: str) -> Optional[UserOrm]:
+async def authenticate_user(db: AsyncSession, username: str, password: str) -> Optional[UserOrm]:
+    res = await db.execute(select(UserOrm).filter(UserOrm.name == username))
     try:
-        user = db.query(UserOrm).filter(UserOrm.name == username).one()
+        user = res.one()[0]
     except NoResultFound:
         return None
+
     if not verify_password(password, user.hashed_password):
         return None
+
+    assert isinstance(user, UserOrm)
     return user
 
 
@@ -52,7 +57,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Union[datetime.time
     return encoded_jwt
 
 
-async def get_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> UserOrm:
+async def get_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> UserOrm:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
@@ -66,15 +71,17 @@ async def get_user(token: str = Depends(oauth2_scheme), db: Session = Depends(ge
     except JWTError:
         raise credentials_exception
 
+    res = await db.execute(select(UserOrm).where(UserOrm.name == username))
     try:
-        user = db.query(UserOrm).filter(UserOrm.name == username).one()
+        user = res.one()[0]
     except NoResultFound:
         raise credentials_exception
+    assert isinstance(user, UserOrm)
     return user
 
 
 async def get_user_or_none(
-    db: Session = Depends(get_db), token: Optional[str] = Depends(oauth2_scheme_optional)
+    db: AsyncSession = Depends(get_db), token: Optional[str] = Depends(oauth2_scheme_optional)
 ) -> Optional[UserOrm]:
     if not token:
         return None
@@ -87,15 +94,17 @@ async def get_user_or_none(
     except JWTError:
         return None
 
+    res = await db.execute(select(UserOrm).where(UserOrm.name == username))
     try:
-        user = db.query(UserOrm).filter(UserOrm.name == username).one()
+        user = res.one()[0]
     except NoResultFound:
         return None
+    assert isinstance(user, UserOrm)
     return user
 
 
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> Token:
-    user = authenticate_user(db, form_data.username, form_data.password)
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)) -> Token:
+    user = await authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -15,22 +15,10 @@ from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session
+from sqlalchemy import select, delete
+from sqlalchemy.ext.asyncio import AsyncSession
 
 app = FastAPI()
-
-
-from auth import get_password_hash
-
-# DEBUG:
-from db.utils import Base, SessionLocal, engine
-
-USER_ID = uuid.UUID('0' * 32)
-Base.metadata.create_all(engine)
-with SessionLocal() as db:
-    db.add(UserOrm(id=USER_ID, name='Test User', hashed_password=get_password_hash('123')))
-    db.commit()
-# END DEBUG
 
 
 app.post('/auth/token', response_model=Token)(login)  # FIXME: registration
@@ -39,7 +27,7 @@ app.post('/auth/token', response_model=Token)(login)  # FIXME: registration
 @app.post('/entries/', status_code=201)
 async def entry_create(
     payload: UploadFile,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> EntrySummary:
     # TODO: make a more efficient implementation of stream usage.
@@ -49,18 +37,19 @@ async def entry_create(
         tmp.seek(0)
 
         try:
-            return parse_uploaded_file(tmp.name, user.id, db)
+            return await parse_uploaded_file(tmp.name, user.id, db)
         except InvalidFile:
             raise HTTPException(422)
 
 
 @app.get('/entries/')
 async def entries_list(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> List[EntrySummary]:
+    res = await db.execute(select(EntryOrm).where(EntryOrm.user_id == user.id))
     out = []
-    for entry in db.query(EntryOrm).filter(EntryOrm.user_id == user.id).all():
+    for (entry,) in res.all():
         out.append(EntrySummary.from_orm(entry))
     return out
 
@@ -68,84 +57,83 @@ async def entries_list(
 @app.get('/entries/{entry_id}/')
 async def entry_detail(
     entry_id: uuid.UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> EntrySummary:
-    try:
-        entry = db.query(EntryOrm).filter(EntryOrm.user_id == user.id, EntryOrm.id == entry_id).one()
-    except NoResultFound:
+    res = await db.execute(select(EntryOrm).where(EntryOrm.user_id == user.id, EntryOrm.id == entry_id))
+    row = res.one_or_none()
+    if not row:
         raise HTTPException(404)
-    else:
-        return EntrySummary.from_orm(entry)
+    return EntrySummary.from_orm(row[0])
 
 
 @app.delete('/entries/{entry_id}/')
 async def entry_remove(
     entry_id: uuid.UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> Response:
-    n = db.query(EntryOrm).filter(EntryOrm.user_id == user.id, EntryOrm.id == entry_id).delete()
-    if n == 0:
+    res = await db.execute(delete(EntryOrm).where(EntryOrm.user_id == user.id, EntryOrm.id == entry_id))
+    if res.rowcount == 0:
         raise HTTPException(404)
-    assert n == 1
+    assert res.rowcount == 1
     return Response(status.HTTP_204_NO_CONTENT)
 
 
 @app.post('/vis/')
 async def vis_create(
     payload: VisualizationCreatePayload,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> Visualization:
     # checking access
-    try:
-        db.query(EntryOrm).filter(EntryOrm.user_id == user.id, EntryOrm.id == payload.entry_id).one()
-    except NoResultFound:
+    res = await db.execute(select(EntryOrm).where(EntryOrm.user_id == user.id, EntryOrm.id == payload.entry_id))
+    if res.one_or_none() is None:
         raise HTTPException(404, detail='Entry not found')
 
     vis = VisualizationOrm(**payload.dict())
     db.add(vis)
-    db.commit()
-    db.refresh(vis)
+    await db.commit()
+
     return Visualization.from_orm(vis)
 
 
 @app.get('/vis/')
 async def vis_list(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> List[Visualization]:
+    res = await db.execute(select(VisualizationOrm).join(EntryOrm).where(EntryOrm.user_id == user.id))
     out = []
-    for vis in db.query(VisualizationOrm).join(EntryOrm).filter(EntryOrm.user_id == user.id).all():
-        out.append(Visualization.from_orm(vis))
+    for row in res.all():
+        out.append(Visualization.from_orm(row[0]))
     return out
 
 
 @app.get('/vis/{vis_id}/')
 async def vis_detail(
     vis_id: uuid.UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user_or_none),
 ) -> VisualizationWithData:
     # checking access
-    try:
-        vis = (
-            db.query(VisualizationOrm)
-            .join(EntryOrm)
-            .filter(
-                or_(
-                    and_(VisualizationOrm.id == vis_id, EntryOrm.user_id == user.id),
-                    VisualizationOrm.is_public == True,
-                )
+    res = await db.execute(
+        select(VisualizationOrm)
+        .join(EntryOrm)
+        .filter(
+            or_(
+                and_(VisualizationOrm.id == vis_id, EntryOrm.user_id == user.id),
+                VisualizationOrm.is_public == True,
             )
-            .one()
         )
+    )
+    try:
+        vis = res.one()[0]
     except NoResultFound:
         raise HTTPException(404)
 
     vis_model = Visualization.from_orm(vis)
-    df = df_for_entry(vis.entry_id, db)
+    df = await df_for_entry(vis.entry_id, db)
     output = vis_model.options.apply(df)
     return VisualizationWithData(data=output, **vis_model.dict())
 
@@ -153,59 +141,57 @@ async def vis_detail(
 @app.delete('/vis/{vis_id}/')
 async def vis_remove(
     vis_id: uuid.UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> Response:
-
-    n = (
-        db.query(VisualizationOrm)
-        .join(EntryOrm)
-        .filter(EntryOrm.user_id == user.id, VisualizationOrm.id == vis_id)
-        .delete()
+    res = await db.execute(
+        select(VisualizationOrm.id).where(
+            VisualizationOrm.entry_id == EntryOrm.id,
+            EntryOrm.user_id == user.id,
+            VisualizationOrm.id == vis_id,
+        )
     )
-    if n == 0:
+
+    if res.rowcount == 0:
         raise HTTPException(404)
-    assert n == 1
+    assert res.rowcount == 1
     return Response(status.HTTP_204_NO_CONTENT)
 
 
 @app.put('/vis/{vis_id}/share/')
 async def vis_share(
     vis_id: uuid.UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> Response:
+    res = await db.execute(
+        select(VisualizationOrm).join(EntryOrm).where(EntryOrm.user_id == user.id, VisualizationOrm.id == vis_id)
+    )
     try:
-        vis = (
-            db.query(VisualizationOrm)
-            .join(EntryOrm)
-            .filter(EntryOrm.user_id == user.id, VisualizationOrm.id == vis_id)
-            .one()
-        )
+        vis = res.one()[0]
     except NoResultFound:
         raise HTTPException(404)
 
     vis.is_public = True
-    db.commit()
+    await db.commit()
+
     return Response()
 
 
 @app.delete('/vis/{vis_id}/share/')
 async def vis_unshare(
     vis_id: uuid.UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
 ) -> Response:
+    res = await db.execute(
+        select(VisualizationOrm).join(EntryOrm).where(EntryOrm.user_id == user.id, VisualizationOrm.id == vis_id)
+    )
     try:
-        vis = (
-            db.query(VisualizationOrm)
-            .join(EntryOrm)
-            .filter(EntryOrm.user_id == user.id, VisualizationOrm.id == vis_id)
-            .one()
-        )
+        vis = res.one()[0]
     except NoResultFound:
         raise HTTPException(404)
 
     vis.is_public = False
-    db.commit()
+    await db.commit()
     return Response()

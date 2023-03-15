@@ -1,9 +1,9 @@
 import json
-from typing import Any, Generator
+from typing import Any, AsyncGenerator
 
 from conf import SQLALCHEMY_DATABASE_URL
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 
 def pydantic_friendly_json_serializer(obj: Any) -> str:
@@ -11,25 +11,26 @@ def pydantic_friendly_json_serializer(obj: Any) -> str:
         if hasattr(o, 'json') and callable(o.json):
             return o.json()
         return o
+
     return json.dumps(obj, default=_pydantic_default)
 
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={'check_same_thread': False},
-    json_serializer=pydantic_friendly_json_serializer,
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL, json_serializer=pydantic_friendly_json_serializer, future=True)
+
+async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
 class Base(DeclarativeBase):
     pass
 
 
-# Dependency
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# FastAPI Dependency
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session() as session:
+        try:
+            yield session
+        except:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()

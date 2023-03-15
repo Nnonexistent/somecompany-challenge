@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 
 from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, Columns
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Uuid
-from sqlalchemy.dialects.sqlite import JSON  # TODO: switch to postgres
+from sqlalchemy.dialects.postgresql import JSONB  # TODO: switch to postgres
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .utils import Base
@@ -78,7 +78,7 @@ class VisualizationOrm(Base):
     dt: Mapped[datetime.datetime] = mapped_column(DateTime(), insert_default=datetime.datetime.now)
     is_public: Mapped[bool] = mapped_column(Boolean(), default=False)
 
-    options: Mapped[Dict[str, Any]] = mapped_column(JSON())
+    options: Mapped[Dict[str, Any]] = mapped_column(JSONB())
 
 
 for field_name in SUMMARY_FIELDS:
