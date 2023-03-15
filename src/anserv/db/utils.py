@@ -1,9 +1,11 @@
 import json
 from typing import Any, AsyncGenerator
 
-from conf import SQLALCHEMY_DATABASE_URL, TEST_SQLALCHEMY_DATABASE_URL
+from conf import SQLALCHEMY_DATABASE_URL, TEST_SQLALCHEMY_DATABASE_URL, TEST_SQLALCHEMY_DATABASE_URL
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 
 def pydantic_friendly_json_serializer(obj: Any) -> str:
@@ -15,11 +17,11 @@ def pydantic_friendly_json_serializer(obj: Any) -> str:
     return json.dumps(obj, default=_pydantic_default)
 
 
-engine = create_async_engine(SQLALCHEMY_DATABASE_URL, json_serializer=pydantic_friendly_json_serializer, future=True)
-test_engine = create_async_engine(TEST_SQLALCHEMY_DATABASE_URL, json_serializer=pydantic_friendly_json_serializer, future=True)
+async_engine = create_async_engine(SQLALCHEMY_DATABASE_URL, json_serializer=pydantic_friendly_json_serializer, future=True, poolclass=NullPool)
+test_engine = create_engine(TEST_SQLALCHEMY_DATABASE_URL, json_serializer=pydantic_friendly_json_serializer)
 
-async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-test_async_session = sessionmaker(test_engine, expire_on_commit=False, class_=AsyncSession)
+async_session = sessionmaker(async_engine, expire_on_commit=False, class_=AsyncSession)
+test_session = sessionmaker(test_engine, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):

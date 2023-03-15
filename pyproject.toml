@@ -12,3 +12,9 @@ line-length = 119
 check_untyped_defs = true
 strict = true
 plugins = ["pydantic.mypy"]
+
+
+[tool.pytest.ini_options]
+env = [
+    "SQLALCHEMY_DATABASE_URL=postgresql+asyncpg://nik:qwe123@localhost/anserv_test",
+]

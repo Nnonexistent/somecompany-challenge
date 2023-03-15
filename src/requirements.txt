@@ -1,6 +1,7 @@
 factory_boy
 pytest-randomly
 pytest
+pytest-env
 pandas-stubs
 pyarrow-stubs
 types-python-jose
