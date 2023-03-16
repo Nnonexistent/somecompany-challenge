@@ -2,18 +2,21 @@ import io
 from typing import Any, Callable, Dict
 
 import pytest
-from db.orm import UserOrm, EntryOrm
+from db.orm import EntryOrm, UserOrm
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-from .conftest import TokenAuth
 from sqlalchemy import select
-from .csv_samples import VALID_SAMPLES, INVALID_SAMPLES
+from sqlalchemy.orm import Session
+
+from .conftest import TokenAuth
+from .csv_samples import INVALID_SAMPLES, VALID_SAMPLES
 
 
 def test_entries_listing(
-    api_client: TestClient, get_auth: Callable[[str, str], TokenAuth], test_entry_factory: Callable[..., EntryOrm]
+    api_client: TestClient,
+    get_auth: Callable[[str, str], TokenAuth],
+    entry_factory: Callable[..., EntryOrm],
 ) -> None:
-    test_entry_factory()
+    entry_factory()
     with api_client as client:
         response = client.get('/entries/', auth=get_auth('user', 'qwe123'))
 
@@ -24,11 +27,11 @@ def test_entries_listing(
 def test_entries_listing_other_user(
     api_client: TestClient,
     get_auth: Callable[[str, str], TokenAuth],
-    test_entry_factory: Callable[..., EntryOrm],
-    test_user_factory: Callable[..., UserOrm],
+    entry_factory: Callable[..., EntryOrm],
+    user_factory: Callable[..., UserOrm],
 ) -> None:
-    test_entry_factory()
-    user = test_user_factory('other', 'qwe123')
+    entry_factory()
+    user = user_factory('other', 'qwe123')
 
     with api_client as client:
         response = client.get('/entries/', auth=get_auth(user.name, 'qwe123'))
@@ -38,9 +41,11 @@ def test_entries_listing_other_user(
 
 
 def test_entries_detail(
-    api_client: TestClient, get_auth: Callable[[str, str], TokenAuth], test_entry_factory: Callable[..., EntryOrm]
+    api_client: TestClient,
+    get_auth: Callable[[str, str], TokenAuth],
+    entry_factory: Callable[..., EntryOrm],
 ) -> None:
-    entry = test_entry_factory()
+    entry = entry_factory()
     with api_client as client:
         response = client.get(f'/entries/{entry.id}/', auth=get_auth('user', 'qwe123'))
 
@@ -51,10 +56,10 @@ def test_entries_detail(
 def test_entries_remove(
     api_client: TestClient,
     get_auth: Callable[[str, str], TokenAuth],
-    test_entry_factory: Callable[..., EntryOrm],
+    entry_factory: Callable[..., EntryOrm],
     db_session: Session,
 ) -> None:
-    entry = test_entry_factory()
+    entry = entry_factory()
     with api_client as client:
         response = client.delete(f'/entries/{entry.id}/', auth=get_auth('user', 'qwe123'))
 
@@ -67,12 +72,12 @@ def test_entries_remove(
 def test_entry_create(
     api_client: TestClient,
     get_auth: Callable[[str, str], TokenAuth],
-    test_user_factory: Callable[..., UserOrm],
+    user_factory: Callable[..., UserOrm],
     csv_data: str,
     expected_stats: Dict[str, Any],
     db_session: Session,
 ) -> None:
-    user = test_user_factory()
+    user = user_factory()
 
     files = {'payload': io.BytesIO(csv_data.encode())}
     with api_client as client:
@@ -88,13 +93,13 @@ def test_entry_create(
 
 
 @pytest.mark.parametrize('csv_data', INVALID_SAMPLES)
-def test_entry_create(
+def test_entry_create_invalid(
     api_client: TestClient,
     get_auth: Callable[[str, str], TokenAuth],
-    test_user_factory: Callable[..., UserOrm],
+    user_factory: Callable[..., UserOrm],
     csv_data: str,
 ) -> None:
-    user = test_user_factory()
+    user = user_factory()
 
     files = {'payload': io.BytesIO(csv_data.encode())}
     with api_client as client:

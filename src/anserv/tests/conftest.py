@@ -3,16 +3,18 @@ import uuid
 from typing import Callable, Generator, Optional
 
 import pytest
+from api.services import parse_uploaded_file
 from app import app
 from auth import get_password_hash
 from conf import BASE_URL
-from db.orm import UserOrm, EntryOrm
+from const import ChartTypes
+from db.orm import EntryOrm, UserOrm, VisualizationOrm
 from db.utils import Base, test_engine, test_session
 from fastapi.testclient import TestClient
 from httpx._auth import Auth
-from sqlalchemy.orm import Session
-from api.services import parse_uploaded_file
 from httpx._models import Request, Response
+from sqlalchemy.orm import Session
+from vis.vis_types import AnyVisType, DateByTypeVis, DateResolution
 
 
 class TokenAuth(Auth):
@@ -41,7 +43,7 @@ def db_session() -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def test_user_factory(db_session: Session) -> Callable[..., UserOrm]:
+def user_factory(db_session: Session) -> Callable[..., UserOrm]:
     def inner(name: str = 'user', password: str = 'qwe123') -> UserOrm:
         user = UserOrm(id=uuid.uuid4(), name=name, hashed_password=get_password_hash(password))
         db_session.add(user)
@@ -64,10 +66,10 @@ def get_auth(api_client: TestClient) -> Callable[[str, str], TokenAuth]:
 
 
 @pytest.fixture
-def test_entry_factory(db_session: Session, test_user_factory: Callable[..., UserOrm]) -> Callable[..., EntryOrm]:
+def entry_factory(db_session: Session, user_factory: Callable[..., UserOrm]) -> Callable[..., EntryOrm]:
     def inner(user: Optional[UserOrm] = None, csv_data: Optional[str] = None) -> EntryOrm:
         if user is None:
-            user = test_user_factory()
+            user = user_factory()
 
         if csv_data is None:
             csv_data = (
@@ -83,5 +85,28 @@ def test_entry_factory(db_session: Session, test_user_factory: Callable[..., Use
         db_session.add(entry)
         db_session.commit()
         return entry
+
+    return inner
+
+
+@pytest.fixture
+def vis_factory(db_session: Session, entry_factory: Callable[..., EntryOrm]) -> Callable[..., VisualizationOrm]:
+    def inner(
+        entry: Optional[EntryOrm] = None,
+        vis_type: Optional[AnyVisType] = None,
+        is_public: bool = False,
+    ) -> VisualizationOrm:
+        if entry is None:
+            entry = entry_factory()
+        if vis_type is None:
+            vis_type = DateByTypeVis(
+                date_resolution=DateResolution.DAY,
+                chart_type=ChartTypes.LINE,
+            )
+
+        vis = VisualizationOrm(id=uuid.uuid4(), entry_id=entry.id, options=vis_type, is_public=is_public)
+        db_session.add(vis)
+        db_session.commit()
+        return vis
 
     return inner

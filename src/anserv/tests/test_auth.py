@@ -7,9 +7,9 @@ from fastapi.testclient import TestClient
 from .conftest import TokenAuth
 
 
-def test_auth(api_client: TestClient, test_user_factory: Callable[..., UserOrm]) -> None:
+def test_auth(api_client: TestClient, user_factory: Callable[..., UserOrm]) -> None:
     password = 'qwe'
-    user = test_user_factory('user', password)
+    user = user_factory('user', password)
 
     with api_client as client:
         response = client.post('/auth/token/', data={'username': user.name, 'password': password})
@@ -19,8 +19,8 @@ def test_auth(api_client: TestClient, test_user_factory: Callable[..., UserOrm])
     assert response.json()['token_type'] == 'bearer'
 
 
-def test_auth_negative(api_client: TestClient, test_user_factory: Callable[..., UserOrm]) -> None:
-    user = test_user_factory()
+def test_auth_negative(api_client: TestClient, user_factory: Callable[..., UserOrm]) -> None:
+    user = user_factory()
     with api_client as client:
         response = client.post('/auth/token/', data={'username': user.name, 'password': 'invalid'})
 
@@ -44,9 +44,9 @@ def test_auth_negative_no_user(api_client: TestClient, username: Any, password: 
 
 
 def test_entries_listing_access(
-    api_client: TestClient, get_auth: Callable[[str, str], TokenAuth], test_user_factory: Callable[..., UserOrm]
+    api_client: TestClient, get_auth: Callable[[str, str], TokenAuth], user_factory: Callable[..., UserOrm]
 ) -> None:
-    user = test_user_factory()
+    user = user_factory()
 
     with api_client as client:
         response = client.get('/entries/', auth=get_auth(user.name, 'qwe123'))
@@ -61,8 +61,8 @@ def test_entries_listing_no_auth(api_client: TestClient) -> None:
     assert response.status_code == 401
 
 
-def test_entries_listing_invalid_token(api_client: TestClient, test_user_factory: Callable[..., UserOrm]) -> None:
-    test_user_factory()
+def test_entries_listing_invalid_token(api_client: TestClient, user_factory: Callable[..., UserOrm]) -> None:
+    user_factory()
     with api_client as client:
         response = client.get('/entries/', auth=TokenAuth('qwe'))
 

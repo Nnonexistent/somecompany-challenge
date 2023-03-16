@@ -17,7 +17,7 @@ class BaseVis(BaseModel):
 
     vis_type: VisTypes
     chart_type: ChartTypes
-    filters: List[Annotated[AnyDataFilter, Field(discriminator='filter_type')]]
+    filters: List[Annotated[AnyDataFilter, Field(discriminator='filter_type')]] = Field(default_factory=list)
 
     class Config:
         frozen = True
@@ -102,7 +102,7 @@ class ReviewOverMergeVis(BaseVis):
         return out
 
 
-class ReviewMergeRationVis(BaseVis):
+class ReviewMergeRatioVis(BaseVis):
     allowed_chart_types = [ChartTypes.SCATTER]
     output_format = ReviewMergeRatioOutputEntry
 
@@ -126,7 +126,7 @@ class ReviewMergeRationVis(BaseVis):
         return out
 
 
-AnyVisType = Union[DateByTypeVis, ReviewOverMergeVis, ReviewMergeRationVis]
+AnyVisType = Union[DateByTypeVis, ReviewOverMergeVis, ReviewMergeRatioVis]
 
 
 # check that all vis types has relevant model

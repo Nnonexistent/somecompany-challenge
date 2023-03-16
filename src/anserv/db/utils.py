@@ -1,22 +1,18 @@
 import json
 from typing import Any, AsyncGenerator
 
-from conf import SQLALCHEMY_DATABASE_URL, TEST_SQLALCHEMY_DATABASE_URL, TEST_SQLALCHEMY_DATABASE_URL
+from conf import SQLALCHEMY_DATABASE_URL, TEST_SQLALCHEMY_DATABASE_URL
+from pydantic.json import pydantic_encoder
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
 
 def pydantic_friendly_json_serializer(obj: Any) -> str:
-    def _pydantic_default(o: Any) -> Any:
-        if hasattr(o, 'json') and callable(o.json):
-            return o.json()
-        return o
+    return json.dumps(obj, default=pydantic_encoder)
 
-    return json.dumps(obj, default=_pydantic_default)
-
-
+# FIXME: NullPool only for tests
 async_engine = create_async_engine(SQLALCHEMY_DATABASE_URL, json_serializer=pydantic_friendly_json_serializer, future=True, poolclass=NullPool)
 test_engine = create_engine(TEST_SQLALCHEMY_DATABASE_URL, json_serializer=pydantic_friendly_json_serializer)
 

@@ -42,9 +42,11 @@ class DateRangeDataFilter(BaseDataFilter):
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.start_date:
-            df = df[df[Columns.DATE] >= self.start_date]
+            d = datetime.datetime.combine(self.start_date, datetime.time())
+            df = df[df[Columns.DATE] >= d]
         if self.end_date:
-            df = df[df[Columns.DATE] <= self.end_date]
+            d = datetime.datetime.combine(self.end_date, datetime.time())
+            df = df[df[Columns.DATE] <= d]
         return df
 
 

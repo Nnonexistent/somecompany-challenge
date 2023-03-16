@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING, Any, Dict, List, Union, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO, Dict, List, Union
 
 import pandas as pd
 import pyarrow as pa
@@ -8,6 +8,7 @@ from db.orm import AtomOrm, EntryOrm
 from pyarrow import csv
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -73,14 +74,18 @@ def calc_summary(df: pd.DataFrame) -> Dict[str, Union[int, float]]:
     return out
 
 
-def _read_sql(con, sql, **kwargs) -> pd.DataFrame:  # FIXME: typing
-    return pd.read_sql_query(sql, con, **kwargs)
+def _read_sql(session: Session, sql: str, **kwargs: Any) -> pd.DataFrame:
+    df = pd.read_sql_query(sql, session.connection(), **kwargs)
+    assert isinstance(df, pd.DataFrame)
+    return df
 
 
 async def df_for_entry(entry_id: uuid.UUID, db: AsyncSession) -> pd.DataFrame:
     cols: List[InstrumentedAttribute[Any]] = [getattr(AtomOrm, col_name) for col_name in Columns]
-    return await db.run_sync(
+    df = await db.run_sync(
         _read_sql,
         sql=select(*cols).where(AtomOrm.entry_id == entry_id),
         parse_dates=[Columns.DATE],
     )
+    assert isinstance(df, pd.DataFrame)
+    return df

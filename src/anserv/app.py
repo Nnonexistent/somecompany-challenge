@@ -118,6 +118,8 @@ async def vis_list(
     res = await db.execute(select(VisualizationOrm).join(EntryOrm).where(EntryOrm.user_id == user.id))
     out = []
     for row in res.all():
+        print(row[0].__dict__)
+
         out.append(Visualization.from_orm(row[0]))
     return out
 
@@ -129,16 +131,15 @@ async def vis_detail(
     user: UserOrm = Depends(get_user_or_none),
 ) -> VisualizationWithData:
     # checking access
-    res = await db.execute(
-        select(VisualizationOrm)
-        .join(EntryOrm)
-        .filter(
-            or_(
-                and_(VisualizationOrm.id == vis_id, EntryOrm.user_id == user.id),
-                VisualizationOrm.is_public == True,
-            )
+    if user is None:
+        filter_stmt = VisualizationOrm.is_public == True
+    else:
+        filter_stmt = or_(
+            and_(VisualizationOrm.id == vis_id, EntryOrm.user_id == user.id),
+            VisualizationOrm.is_public == True,
         )
-    )
+
+    res = await db.execute(select(VisualizationOrm).join(EntryOrm).filter(filter_stmt))
     try:
         vis = res.one()[0]
     except NoResultFound:
@@ -157,7 +158,7 @@ async def vis_remove(
     user: UserOrm = Depends(get_user),
 ) -> Response:
     res = await db.execute(
-        select(VisualizationOrm.id).where(
+        select(VisualizationOrm).where(
             VisualizationOrm.entry_id == EntryOrm.id,
             EntryOrm.user_id == user.id,
             VisualizationOrm.id == vis_id,
