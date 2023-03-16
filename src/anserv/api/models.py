@@ -4,8 +4,9 @@ import datetime
 import uuid
 from typing import List
 
-from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS
 from pydantic import BaseModel, Field
+
+from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS
 from vis.output import AnyOutputEntry
 from vis.vis_types import AnyVisType
 

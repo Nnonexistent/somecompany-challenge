@@ -3,9 +3,10 @@ import typing
 from typing import ClassVar, List, Literal, Union
 
 import pandas as pd
-from const import MT2COL, ChartTypes, Columns, MeasureTypes, VisTypes
 from pydantic import BaseModel, Field, validator
 from typing_extensions import Annotated, Type
+
+from const import MT2COL, ChartTypes, Columns, MeasureTypes, VisTypes
 
 from .filters import AnyDataFilter
 from .output import AnyOutputEntry, DateByTypeOutputEntry, ReviewMergeRatioOutputEntry, ReviewOverMergeOutputEntry

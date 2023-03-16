@@ -2,10 +2,11 @@ import datetime
 import uuid
 from typing import Any, Dict, List
 
-from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, Columns
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, Columns
 
 from .utils import Base
 

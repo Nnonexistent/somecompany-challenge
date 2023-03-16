@@ -3,9 +3,10 @@ import enum
 import typing
 from typing import List, Literal, Optional, Union
 
-from const import Columns
 import pandas as pd
 from pydantic import BaseModel, Field
+
+from const import Columns
 
 
 class DataFilterTypes(str, enum.Enum):

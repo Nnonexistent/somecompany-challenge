@@ -3,6 +3,11 @@ import uuid
 from typing import Callable, Generator, Optional
 
 import pytest
+from fastapi.testclient import TestClient
+from httpx._auth import Auth
+from httpx._models import Request, Response
+from sqlalchemy.orm import Session
+
 from api.services import parse_uploaded_file
 from app import app
 from auth import get_password_hash
@@ -10,10 +15,6 @@ from conf import BASE_URL
 from const import ChartTypes
 from db.orm import EntryOrm, UserOrm, VisualizationOrm
 from db.utils import Base, test_engine, test_session
-from fastapi.testclient import TestClient
-from httpx._auth import Auth
-from httpx._models import Request, Response
-from sqlalchemy.orm import Session
 from vis.vis_types import AnyVisType, DateByTypeVis, DateResolution
 
 

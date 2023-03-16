@@ -1,8 +1,9 @@
 from typing import Any, Callable
 
 import pytest
-from db.orm import UserOrm
 from fastapi.testclient import TestClient
+
+from db.orm import UserOrm
 
 from .conftest import TokenAuth
 

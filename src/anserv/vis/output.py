@@ -1,8 +1,9 @@
 import datetime
 from typing import Union
 
-from const import MeasureTypes
 from pydantic import BaseModel
+
+from const import MeasureTypes
 
 
 class BaseOutputEntry(BaseModel):

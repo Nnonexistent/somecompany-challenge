@@ -1,9 +1,6 @@
 import datetime
 from typing import Any, Dict, Literal, Optional, Union
 
-from conf import AUTH_ALGORITHM, AUTH_SECRET_KEY, AUTH_TOKEN_EXPIRE_MINUTES
-from db.orm import UserOrm
-from db.utils import get_db
 from fastapi import Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -13,6 +10,10 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from conf import AUTH_ALGORITHM, AUTH_SECRET_KEY, AUTH_TOKEN_EXPIRE_MINUTES
+from db.orm import UserOrm
+from db.utils import get_db
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token/')
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl='auth/token/', auto_error=False)

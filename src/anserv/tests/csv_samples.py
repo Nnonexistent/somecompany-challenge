@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple
 
 VALID_SAMPLES: List[Tuple[str, Dict[str, Any]]] = [
     (  # basic

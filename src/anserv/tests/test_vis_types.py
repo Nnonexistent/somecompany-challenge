@@ -1,9 +1,10 @@
 from typing import Any, Callable, Dict, Type
 
 import pytest
-from db.orm import EntryOrm, VisualizationOrm
 from fastapi.testclient import TestClient
-from vis.vis_types import AnyVisType, DateByTypeVis, ReviewOverMergeVis, ReviewMergeRatioVis
+
+from db.orm import EntryOrm, VisualizationOrm
+from vis.vis_types import AnyVisType, DateByTypeVis, ReviewMergeRatioVis, ReviewOverMergeVis
 
 CSV_DATA = """
 team,date,merge_time,review_time

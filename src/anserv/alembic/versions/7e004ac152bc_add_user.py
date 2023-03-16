@@ -6,9 +6,10 @@ Create Date: 2023-03-16 02:41:32.872075
 """
 import uuid
 
-from alembic import op
 from sqlalchemy import String, Uuid
 from sqlalchemy.sql import column, table
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '7e004ac152bc'

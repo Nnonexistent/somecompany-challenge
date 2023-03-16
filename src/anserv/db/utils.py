@@ -1,12 +1,13 @@
 import json
 from typing import Any, AsyncGenerator
 
-from conf import SQLALCHEMY_URL, TEST_SQLALCHEMY_URL, SQLALCHEMY_USE_NULLPOOL
 from pydantic.json import pydantic_encoder
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy.pool import NullPool
+
+from conf import SQLALCHEMY_URL, SQLALCHEMY_USE_NULLPOOL, TEST_SQLALCHEMY_URL
 
 
 def pydantic_json_serializer(obj: Any) -> str:

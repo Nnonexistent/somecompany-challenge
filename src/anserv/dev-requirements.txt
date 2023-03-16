@@ -1,5 +1,6 @@
 blue
 httpx
+isort
 mypy
 pandas-stubs
 pyarrow-stubs

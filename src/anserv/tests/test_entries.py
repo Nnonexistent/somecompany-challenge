@@ -2,10 +2,11 @@ import io
 from typing import Any, Callable, Dict
 
 import pytest
-from db.orm import EntryOrm, UserOrm
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from db.orm import EntryOrm, UserOrm
 
 from .conftest import TokenAuth
 from .csv_samples import INVALID_SAMPLES, VALID_SAMPLES
