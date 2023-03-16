@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import uuid
-from typing import List, Union, Literal
+from typing import List
 
 from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS
 from pydantic import BaseModel, Field
@@ -20,6 +20,8 @@ class LoginPayload(BaseModel):
 
 class EntrySummary(BaseModel):
     id: uuid.UUID
+
+    dt: datetime.datetime = Field(description='Created at')
 
     date_start: datetime.date
     date_end: datetime.date
@@ -47,16 +49,19 @@ class EntrySummary(BaseModel):
         orm_mode = True
 
 
-class VisualizationCreatePayload(BaseModel, frozen=True):
+class VisualizationCreatePayload(BaseModel):
     entry_id: uuid.UUID
     options: AnyVisType = Field(discriminator='vis_type')
+
+    class Config:
+        frozen = True
 
 
 class Visualization(BaseModel):
     id: uuid.UUID
 
     entry_id: uuid.UUID
-    dt: datetime.datetime
+    dt: datetime.datetime = Field(description='Created at')
     is_public: bool
     options: AnyVisType = Field(discriminator='vis_type')
 

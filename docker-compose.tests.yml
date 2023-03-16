@@ -1,0 +1,14 @@
+version: "3.7"
+
+services:
+  backend:
+    build:
+      context: src/anserv
+      dockerfile: Dockerfile.tests
+
+    environment:
+      POSTGRES_DB: 'anserv_test'
+
+  postgres:
+    environment:
+      POSTGRES_DB: 'anserv_test'

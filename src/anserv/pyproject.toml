@@ -16,5 +16,6 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 env = [
-    "SQLALCHEMY_DATABASE_URL=postgresql+asyncpg://nik:qwe123@localhost/anserv_test",
+    "POSTGRES_DB=anserv_test",
+    "SQLALCHEMY_USE_NULLPOOL=true"
 ]

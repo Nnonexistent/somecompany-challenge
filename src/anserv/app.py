@@ -13,7 +13,7 @@ from db.orm import EntryOrm, UserOrm, VisualizationOrm
 from db.utils import get_db
 from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +25,7 @@ def root() -> Response:
     return Response()
 
 
-app.post('/auth/token/', response_model=Token)(login)  # FIXME: registration
+app.post('/auth/token/', response_model=Token)(login)
 
 
 @app.post('/entries/', status_code=201)
@@ -118,8 +118,6 @@ async def vis_list(
     res = await db.execute(select(VisualizationOrm).join(EntryOrm).where(EntryOrm.user_id == user.id))
     out = []
     for row in res.all():
-        print(row[0].__dict__)
-
         out.append(Visualization.from_orm(row[0]))
     return out
 

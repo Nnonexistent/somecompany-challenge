@@ -1,11 +1,17 @@
 import os
 
-SQLALCHEMY_DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL', 'postgresql+asyncpg://nik:qwe123@localhost/anserv')
-TEST_SQLALCHEMY_DATABASE_URL = 'postgresql+psycopg2://nik:qwe123@localhost/anserv_test'
+BASE_URL = os.getenv('BASE_URL', 'http://localhost:8000')
 
 
-AUTH_SECRET_KEY = os.getenv('AUTH_SECRET_KEY', '09d25e094faa6ca2556c818166b7c1563b93f7099f6f0f4caa6cf63b88e8d3e7')
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'anserv')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'password')
+POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
+POSTGRES_DB = os.getenv('POSTGRES_DB', 'anserv')
+
+SQLALCHEMY_URL = f'postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}'
+TEST_SQLALCHEMY_URL = f'postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}'
+SQLALCHEMY_USE_NULLPOOL = os.getenv('SQLALCHEMY_USE_NULLPOOL', '').lower() in ['true', '1']
+
+AUTH_SECRET_KEY = os.getenv('AUTH_SECRET_KEY', 'b06a6d47bac342f9887c7c6594468a57d02e3de26aeb4549a4aa3090c7c81002')
 AUTH_ALGORITHM = 'HS256'
 AUTH_TOKEN_EXPIRE_MINUTES = 12 * 60
-
-BASE_URL = os.getenv('BASE_URL', 'http://localhost:8000')

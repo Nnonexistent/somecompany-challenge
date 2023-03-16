@@ -1,0 +1,9 @@
+blue
+httpx
+mypy
+pandas-stubs
+pyarrow-stubs
+pytest
+pytest-env
+types-passlib
+types-python-jose

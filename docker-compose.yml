@@ -1,0 +1,35 @@
+version: "3.7"
+
+x-common-variables:
+  &common-variables
+  POSTGRES_PASSWORD: 'password'
+  POSTGRES_USER: 'anserv'
+  POSTGRES_DB: 'anserv'
+  POSTGRES_HOST: 'postgres'
+
+services:
+  backend:
+    build: src/anserv
+    depends_on:
+      - postgres
+    restart: on-failure
+    environment:
+      <<: *common-variables
+    ports:
+      - "8000:8000"
+
+  postgres:
+    image: postgres:14
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    restart: on-failure
+    environment:
+      <<: *common-variables
+    healthcheck:
+      test: pg_isready
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:

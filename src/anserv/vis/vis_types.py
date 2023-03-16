@@ -111,7 +111,7 @@ class ReviewMergeRatioVis(BaseVis):
     def make_output(self, df: pd.DataFrame) -> List[ReviewMergeRatioOutputEntry]:  # FIXME: typing
         out = []
 
-        grouped = df.groupby(Columns.TEAM).sum()
+        grouped = df.groupby(Columns.TEAM).sum()  # FIXME: pandas deprecation
 
         for mt in MeasureTypes:
             for team, value in grouped[MT2COL[mt]].items():
