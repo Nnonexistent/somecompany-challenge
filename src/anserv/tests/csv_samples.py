@@ -12,6 +12,7 @@ review_time,team,date,merge_time
         {
             'date_start': '2023-01-14',
             'date_end': '2023-02-14',
+            'teams': ['Application', 'Data Service', 'Platform'],
             'merge_time_min': 0,
             'merge_time_mean': 294.5,
             'review_time_max': 144299,
@@ -27,6 +28,7 @@ review_time,team,date,merge_time
         {
             'date_start': '2023-01-01',
             'date_end': '2023-01-02',
+            'teams': [''],
             'merge_time_min': 0,
             'merge_time_mean': 0,
             'review_time_max': 0,
@@ -42,6 +44,7 @@ Asd,2023-01-02,100,100,zxc
         {
             'date_start': '2023-01-01',
             'date_end': '2023-01-02',
+            'teams': ['Qwe', 'Asd'],
             'merge_time_min': 100,
             'merge_time_mean': 100,
             'review_time_max': 100,

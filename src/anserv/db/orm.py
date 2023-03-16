@@ -3,7 +3,7 @@ import uuid
 from typing import Any, Dict, List
 
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Uuid
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, Columns
@@ -37,6 +37,7 @@ class EntryOrm(Base):
 
     date_start: Mapped[datetime.date] = mapped_column(Date)
     date_end: Mapped[datetime.date] = mapped_column(Date)
+    teams: Mapped[List[str]] = mapped_column(ARRAY(String))
 
     merge_time_min: Mapped[int] = mapped_column(Integer)
     merge_time_max: Mapped[int] = mapped_column(Integer)

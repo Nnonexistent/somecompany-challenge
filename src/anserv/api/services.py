@@ -64,6 +64,7 @@ def calc_summary(df: pd.DataFrame) -> Dict[str, Union[int, float]]:
     out = {
         'date_start': df[Columns.DATE].min(),
         'date_end': df[Columns.DATE].max(),
+        'teams': list(df[Columns.TEAM].unique()),
     }
     for field_name in SUMMARY_FIELDS:
         series = df[field_name]

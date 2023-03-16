@@ -26,6 +26,7 @@ class EntrySummary(BaseModel):
 
     date_start: datetime.date
     date_end: datetime.date
+    teams: List[str]
 
     merge_time_min: int
     merge_time_max: int
