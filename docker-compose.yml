@@ -26,7 +26,7 @@ services:
     environment:
       <<: *common-variables
     healthcheck:
-      test: pg_isready
+      test: pg_isready -U anserv
       interval: 10s
       timeout: 5s
       retries: 5

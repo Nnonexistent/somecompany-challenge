@@ -12,3 +12,6 @@ services:
   postgres:
     environment:
       POSTGRES_DB: 'anserv_test'
+
+    healthcheck:
+      test: pg_isready -U anserv -d anserv_test
