@@ -61,7 +61,7 @@ class DateByTypeVis(BaseVis):
     vis_type: Literal[VisTypes.DATE_BY_TYPE] = VisTypes.DATE_BY_TYPE
     date_resolution: DateResolution
 
-    def make_output(self, df: pd.DataFrame) -> List[DateByTypeOutputEntry]:  # FIXME: typing
+    def make_output(self, df: pd.DataFrame) -> List[DateByTypeOutputEntry]:  # type: ignore[override]
         out = []
 
         freq = RES_TO_FREQ[self.date_resolution]
@@ -89,7 +89,7 @@ class ReviewOverMergeVis(BaseVis):
 
     vis_type: Literal[VisTypes.REVIEW_OVER_MERGE] = VisTypes.REVIEW_OVER_MERGE
 
-    def make_output(self, df: pd.DataFrame) -> List[ReviewOverMergeOutputEntry]:  # FIXME: typing
+    def make_output(self, df: pd.DataFrame) -> List[ReviewOverMergeOutputEntry]:  # type: ignore[override]
         out = []
         for _, row in df.iterrows():
             out.append(
@@ -109,7 +109,7 @@ class ReviewMergeRatioVis(BaseVis):
 
     vis_type: Literal[VisTypes.REVIEW_MERGE_RATIO] = VisTypes.REVIEW_MERGE_RATIO
 
-    def make_output(self, df: pd.DataFrame) -> List[ReviewMergeRatioOutputEntry]:  # FIXME: typing
+    def make_output(self, df: pd.DataFrame) -> List[ReviewMergeRatioOutputEntry]:  # type: ignore[override]
         out = []
 
         grouped = df.groupby(Columns.TEAM).sum()  # FIXME: pandas deprecation

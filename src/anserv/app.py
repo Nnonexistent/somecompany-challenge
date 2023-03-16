@@ -4,7 +4,7 @@ load_dotenv()
 
 import tempfile
 import uuid
-from typing import List
+from typing import List, Optional
 
 from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
@@ -12,9 +12,9 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.auth import Token, get_user, get_user_or_none, login
 from api.models import EntrySummary, Visualization, VisualizationCreatePayload, VisualizationWithData
 from api.services import InvalidFile, df_for_entry, parse_uploaded_file
-from auth import Token, get_user, get_user_or_none, login
 from db.orm import EntryOrm, UserOrm, VisualizationOrm
 from db.utils import get_db
 
@@ -115,8 +115,13 @@ async def vis_create(
 async def vis_list(
     db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
+    entry_id: Optional[uuid.UUID] = None,
 ) -> List[Visualization]:
-    res = await db.execute(select(VisualizationOrm).join(EntryOrm).where(EntryOrm.user_id == user.id))
+    stmt = select(VisualizationOrm).join(EntryOrm).where(EntryOrm.user_id == user.id)
+    if entry_id:
+        stmt = stmt.where(VisualizationOrm.entry_id == entry_id)
+
+    res = await db.execute(stmt)
     out = []
     for row in res.all():
         out.append(Visualization.from_orm(row[0]))

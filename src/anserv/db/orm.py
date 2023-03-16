@@ -3,7 +3,7 @@ import uuid
 from typing import Any, Dict, List
 
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Uuid
-from sqlalchemy.dialects.postgresql import JSONB, ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, Columns
@@ -83,9 +83,11 @@ class VisualizationOrm(Base):
     options: Mapped[Dict[str, Any]] = mapped_column(JSONB)
 
 
+# check if the Entry orm model has all specified summary fields
 for field_name in SUMMARY_FIELDS:
     for suffix in SUMMARY_FUNCTIONS.keys():
         assert hasattr(EntryOrm, f'{field_name}_{suffix}')
 
+# check if the Atom orm model has all required fields
 for col in Columns:
     assert hasattr(AtomOrm, col)

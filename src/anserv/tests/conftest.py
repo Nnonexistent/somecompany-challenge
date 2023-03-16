@@ -8,9 +8,9 @@ from httpx._auth import Auth
 from httpx._models import Request, Response
 from sqlalchemy.orm import Session
 
+from api.auth import get_password_hash
 from api.services import parse_uploaded_file
 from app import app
-from auth import get_password_hash
 from conf import BASE_URL
 from const import ChartTypes
 from db.orm import EntryOrm, UserOrm, VisualizationOrm

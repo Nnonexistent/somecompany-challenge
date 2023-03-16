@@ -1,7 +1,7 @@
 """Initial
 
 Revision ID: 4b99c04fa336
-Revises: 
+Revises:
 Create Date: 2023-03-16 02:40:22.889206
 
 """
@@ -65,7 +65,7 @@ def upgrade() -> None:
     sa.Column('entry_id', sa.Uuid(), nullable=False),
     sa.Column('dt', sa.DateTime(), nullable=False),
     sa.Column('is_public', sa.Boolean(), nullable=False),
-    sa.Column('options', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('options', postgresql.JSONB(astext_type=sa.Text()), nullable=False),  # type: ignore[no-untyped-call]
     sa.ForeignKeyConstraint(['entry_id'], ['entry.id'], ),
     sa.PrimaryKeyConstraint('id', 'entry_id')
     )

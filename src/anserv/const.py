@@ -21,6 +21,11 @@ class ChartTypes(str, enum.Enum):
     PIE = 'pie'
 
 
+class MeasureTypes(str, enum.Enum):
+    REVIEW = 'review'
+    MERGE = 'merge'
+
+
 class Columns(str, enum.Enum):
     REVIEW_TIME = 'review_time'
     TEAM = 'team'
@@ -28,22 +33,18 @@ class Columns(str, enum.Enum):
     MERGE_TIME = 'merge_time'
 
 
-class MeasureTypes(str, enum.Enum):
-    REVIEW = 'review'
-    MERGE = 'merge'
-
-
-MT2COL = {
+MT2COL = {  # Measure type to column name
     MeasureTypes.REVIEW: Columns.REVIEW_TIME,
     MeasureTypes.MERGE: Columns.MERGE_TIME,
 }
 
-PA_COLUMN_TYPES = {
+PA_COLUMN_TYPES = {  # Input CSV format for pyarrow
     Columns.REVIEW_TIME: pa.int32(),
     Columns.TEAM: pa.string(),
     Columns.DATE: pa.date32(),
     Columns.MERGE_TIME: pa.int32(),
 }
+
 SUMMARY_FIELDS = [Columns.MERGE_TIME, Columns.REVIEW_TIME]
 SUMMARY_FUNCTIONS: Dict[str, Callable[[pd.Series[int]], Union[int, float]]] = {
     'min': lambda s: int(s.min()),

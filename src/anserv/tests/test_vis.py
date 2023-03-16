@@ -30,6 +30,27 @@ def test_vis_listing(
     assert len(response.json()) == 2
 
 
+def test_vis_listing_filter(
+    api_client: TestClient,
+    get_auth: Callable[[str, str], TokenAuth],
+    vis_factory: Callable[..., VisualizationOrm],
+    entry_factory: Callable[..., EntryOrm],
+    user_factory: Callable[..., UserOrm],
+) -> None:
+    user = user_factory('user', 'qwe123')
+    entry = entry_factory(user=user)
+    other_entry = entry_factory(user=user)
+    vis = vis_factory(entry=entry)
+    vis_factory(entry=other_entry)
+
+    with api_client as client:
+        response = client.get(f'/vis/?entry_id={entry.id}', auth=get_auth('user', 'qwe123'))
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]['id'] == str(vis.id)
+
+
 def test_vis_listing_other(
     api_client: TestClient,
     get_auth: Callable[[str, str], TokenAuth],
