@@ -58,7 +58,7 @@ def user_factory(db_session: Session) -> Callable[..., UserOrm]:
 def get_auth(api_client: TestClient) -> Callable[[str, str], TokenAuth]:
     def inner(username: str, password: str) -> TokenAuth:
         with api_client as client:
-            response = client.post('/auth/token/', data={'username': username, 'password': password})
+            response = client.post('/api/auth/token/', data={'username': username, 'password': password})
 
         assert response.status_code == 200
         return TokenAuth(response.json()['access_token'])

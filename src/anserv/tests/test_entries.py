@@ -19,7 +19,7 @@ def test_entries_listing(
 ) -> None:
     entry_factory()
     with api_client as client:
-        response = client.get('/entries/', auth=get_auth('user', 'qwe123'))
+        response = client.get('/api/entries/', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -35,7 +35,7 @@ def test_entries_listing_other_user(
     user = user_factory('other', 'qwe123')
 
     with api_client as client:
-        response = client.get('/entries/', auth=get_auth(user.name, 'qwe123'))
+        response = client.get('/api/entries/', auth=get_auth(user.name, 'qwe123'))
 
     assert response.status_code == 200
     assert len(response.json()) == 0
@@ -48,7 +48,7 @@ def test_entries_detail(
 ) -> None:
     entry = entry_factory()
     with api_client as client:
-        response = client.get(f'/entries/{entry.id}/', auth=get_auth('user', 'qwe123'))
+        response = client.get(f'/api/entries/{entry.id}/', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code == 200
     assert response.json()['id'] == str(entry.id)
@@ -62,7 +62,7 @@ def test_entries_remove(
 ) -> None:
     entry = entry_factory()
     with api_client as client:
-        response = client.delete(f'/entries/{entry.id}/', auth=get_auth('user', 'qwe123'))
+        response = client.delete(f'/api/entries/{entry.id}/', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code // 100 == 2
 
@@ -82,7 +82,7 @@ def test_entry_create(
 
     files = {'payload': io.BytesIO(csv_data.encode())}
     with api_client as client:
-        response = client.post('/entries/', auth=get_auth(user.name, 'qwe123'), files=files)
+        response = client.post('/api/entries/', auth=get_auth(user.name, 'qwe123'), files=files)
 
     assert response.status_code == 201
 
@@ -104,6 +104,6 @@ def test_entry_create_invalid(
 
     files = {'payload': io.BytesIO(csv_data.encode())}
     with api_client as client:
-        response = client.post('/entries/', auth=get_auth(user.name, 'qwe123'), files=files)
+        response = client.post('/api/entries/', auth=get_auth(user.name, 'qwe123'), files=files)
 
     assert response.status_code == 422

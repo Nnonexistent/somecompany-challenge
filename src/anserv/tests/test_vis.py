@@ -24,7 +24,7 @@ def test_vis_listing(
     vis_factory(entry=entry_2)
 
     with api_client as client:
-        response = client.get('/vis/', auth=get_auth('user', 'qwe123'))
+        response = client.get('/api/vis/', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code == 200
     assert len(response.json()) == 2
@@ -44,7 +44,7 @@ def test_vis_listing_filter(
     vis_factory(entry=other_entry)
 
     with api_client as client:
-        response = client.get(f'/vis/?entry_id={entry.id}', auth=get_auth('user', 'qwe123'))
+        response = client.get(f'/api/vis/?entry_id={entry.id}', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -61,7 +61,7 @@ def test_vis_listing_other(
     vis_factory()
 
     with api_client as client:
-        response = client.get('/vis/', auth=get_auth('other', 'qwe123'))
+        response = client.get('/api/vis/', auth=get_auth('other', 'qwe123'))
 
     assert response.status_code == 200
     assert len(response.json()) == 0
@@ -74,7 +74,7 @@ def test_vis_detail(
 ) -> None:
     vis = vis_factory()
     with api_client as client:
-        response = client.get(f'/vis/{vis.id}/', auth=get_auth('user', 'qwe123'))
+        response = client.get(f'/api/vis/{vis.id}/', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code == 200
     assert response.json()['id'] == str(vis.id)
@@ -89,7 +89,7 @@ def test_vis_remove(
 ) -> None:
     vis = vis_factory()
     with api_client as client:
-        response = client.delete(f'/vis/{vis.id}/', auth=get_auth('user', 'qwe123'))
+        response = client.delete(f'/api/vis/{vis.id}/', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code // 100 == 2
 
@@ -104,7 +104,7 @@ def test_vis_share(
 ) -> None:
     vis = vis_factory()
     with api_client as client:
-        response = client.put(f'/vis/{vis.id}/share/', auth=get_auth('user', 'qwe123'))
+        response = client.put(f'/api/vis/{vis.id}/share/', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code // 100 == 2
 
@@ -121,7 +121,7 @@ def test_vis_share_other(
     vis = vis_factory()
     user = user_factory('other', 'qwe123')
     with api_client as client:
-        response = client.put(f'/vis/{vis.id}/share/', auth=get_auth(user.name, 'qwe123'))
+        response = client.put(f'/api/vis/{vis.id}/share/', auth=get_auth(user.name, 'qwe123'))
 
     assert response.status_code // 100 == 4
 
@@ -136,7 +136,7 @@ def test_vis_unshare(
 ) -> None:
     vis = vis_factory()
     with api_client as client:
-        response = client.delete(f'/vis/{vis.id}/share/', auth=get_auth('user', 'qwe123'))
+        response = client.delete(f'/api/vis/{vis.id}/share/', auth=get_auth('user', 'qwe123'))
 
     assert response.status_code // 100 == 2
 
@@ -164,7 +164,7 @@ def test_shared_access(
     vis = vis_factory(is_public=True)
 
     with api_client as client:
-        response = client.get(f'/vis/{vis.id}/', auth=auth_factory(get_auth))
+        response = client.get(f'/api/vis/{vis.id}/', auth=auth_factory(get_auth))
 
     assert response.status_code == 200
     assert response.json()['id'] == str(vis.id)

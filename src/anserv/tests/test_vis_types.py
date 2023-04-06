@@ -85,7 +85,7 @@ def test_date_by_type_vis(
     vis = vis_factory(entry=entry, vis_type=vis_type, is_public=True)
 
     with api_client as client:
-        response = client.get(f'/vis/{vis.id}/')
+        response = client.get(f'/api/vis/{vis.id}/')
 
     assert response.status_code == 200
     data = response.json()['data']

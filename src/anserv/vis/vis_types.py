@@ -1,6 +1,6 @@
 import enum
 import typing
-from typing import ClassVar, List, Literal, Union
+from typing import ClassVar, List, Literal, Union, Sequence
 
 import pandas as pd
 from pydantic import BaseModel, Field, validator
@@ -37,7 +37,7 @@ class BaseVis(BaseModel):
         assert not out or isinstance(out[0], self.output_format)
         return out
 
-    def make_output(self, df: pd.DataFrame) -> List[AnyOutputEntry]:
+    def make_output(self, df: pd.DataFrame) -> Sequence[AnyOutputEntry]:
         raise NotImplementedError
 
 
@@ -61,7 +61,7 @@ class DateByTypeVis(BaseVis):
     vis_type: Literal[VisTypes.DATE_BY_TYPE] = VisTypes.DATE_BY_TYPE
     date_resolution: DateResolution
 
-    def make_output(self, df: pd.DataFrame) -> List[DateByTypeOutputEntry]:  # type: ignore[override]
+    def make_output(self, df: pd.DataFrame) -> Sequence[DateByTypeOutputEntry]:
         out = []
 
         freq = RES_TO_FREQ[self.date_resolution]
@@ -89,7 +89,7 @@ class ReviewOverMergeVis(BaseVis):
 
     vis_type: Literal[VisTypes.REVIEW_OVER_MERGE] = VisTypes.REVIEW_OVER_MERGE
 
-    def make_output(self, df: pd.DataFrame) -> List[ReviewOverMergeOutputEntry]:  # type: ignore[override]
+    def make_output(self, df: pd.DataFrame) -> Sequence[ReviewOverMergeOutputEntry]:
         out = []
         for _, row in df.iterrows():
             out.append(
@@ -109,7 +109,7 @@ class ReviewMergeRatioVis(BaseVis):
 
     vis_type: Literal[VisTypes.REVIEW_MERGE_RATIO] = VisTypes.REVIEW_MERGE_RATIO
 
-    def make_output(self, df: pd.DataFrame) -> List[ReviewMergeRatioOutputEntry]:  # type: ignore[override]
+    def make_output(self, df: pd.DataFrame) -> Sequence[ReviewMergeRatioOutputEntry]:
         out = []
 
         grouped = df.groupby(Columns.TEAM).sum()  # FIXME: pandas deprecation

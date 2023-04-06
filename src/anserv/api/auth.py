@@ -15,8 +15,8 @@ from conf import AUTH_ALGORITHM, AUTH_SECRET_KEY, AUTH_TOKEN_EXPIRE_MINUTES
 from db.orm import UserOrm
 from db.utils import get_db
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token/')
-oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl='auth/token/', auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/auth/token/')
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl='api/auth/token/', auto_error=False)
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 

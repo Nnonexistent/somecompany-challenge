@@ -6,7 +6,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS
+from const import SUMMARY_FIELDS, SUMMARY_FUNCTIONS, ChartTypes, VisTypes
 from vis.output import AnyOutputEntry
 from vis.vis_types import AnyVisType
 
@@ -78,6 +78,13 @@ class VisualizationWithData(Visualization):
     class Config:
         frozen = True
         orm_mode = False
+
+
+class VisTypeSchema(BaseModel):
+    allowed_chart_types: List[ChartTypes]
+    vis_type: VisTypes
+
+    extra_fields: dict = {}  # TODO
 
 
 for field_name in SUMMARY_FIELDS:

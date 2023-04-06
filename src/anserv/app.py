@@ -4,7 +4,7 @@ load_dotenv()
 
 import tempfile
 import uuid
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, get_args
 
 from fastapi import Depends, FastAPI, Response, UploadFile, status
 from fastapi.exceptions import HTTPException
@@ -13,10 +13,11 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth import Token, get_user, get_user_or_none, login
-from api.models import EntrySummary, Visualization, VisualizationCreatePayload, VisualizationWithData
+from api.models import EntrySummary, VisTypeSchema, Visualization, VisualizationCreatePayload, VisualizationWithData
 from api.services import InvalidFile, df_for_entry, parse_uploaded_file
 from db.orm import EntryOrm, UserOrm, VisualizationOrm
 from db.utils import get_db
+from vis.vis_types import AnyVisType
 
 app = FastAPI()
 
@@ -26,10 +27,18 @@ def root() -> Response:
     return Response()
 
 
-app.post('/auth/token/', response_model=Token)(login)
+app.post('/api/auth/token/', response_model=Token)(login)
 
 
-@app.post('/entries/', status_code=201)
+@app.get('/api/users/me/')
+def users_me(user: UserOrm = Depends(get_user)) -> Dict[str, Any]:
+    return {
+        'id': user.id,
+        'is_authenticated': True,
+    }
+
+
+@app.post('/api/entries/', status_code=201)
 async def entry_create(
     payload: UploadFile,
     db: AsyncSession = Depends(get_db),
@@ -52,7 +61,7 @@ async def entry_create(
     return EntrySummary.from_orm(entry)
 
 
-@app.get('/entries/')
+@app.get('/api/entries/')
 async def entries_list(
     db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
@@ -64,7 +73,7 @@ async def entries_list(
     return out
 
 
-@app.get('/entries/{entry_id}/')
+@app.get('/api/entries/{entry_id}/')
 async def entry_detail(
     entry_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -77,7 +86,7 @@ async def entry_detail(
     return EntrySummary.from_orm(row[0])
 
 
-@app.delete('/entries/{entry_id}/')
+@app.delete('/api/entries/{entry_id}/')
 async def entry_remove(
     entry_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -93,7 +102,7 @@ async def entry_remove(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.post('/vis/')
+@app.post('/api/vis/')
 async def vis_create(
     payload: VisualizationCreatePayload,
     db: AsyncSession = Depends(get_db),
@@ -111,7 +120,7 @@ async def vis_create(
     return Visualization.from_orm(vis)
 
 
-@app.get('/vis/')
+@app.get('/api/vis/')
 async def vis_list(
     db: AsyncSession = Depends(get_db),
     user: UserOrm = Depends(get_user),
@@ -128,7 +137,18 @@ async def vis_list(
     return out
 
 
-@app.get('/vis/{vis_id}/')
+@app.get('/api/vis_types/')
+async def vis_types() -> List[VisTypeSchema]:
+    out = []
+    for vis_type_class in get_args(AnyVisType):
+        out.append(VisTypeSchema(
+            vis_type=vis_type_class.__fields__['vis_type'].default,
+            allowed_chart_types=vis_type_class.allowed_chart_types,
+        ))
+    return out
+
+
+@app.get('/api/vis/{vis_id}/')
 async def vis_detail(
     vis_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -155,7 +175,7 @@ async def vis_detail(
     return VisualizationWithData(data=output, **vis_model.dict())
 
 
-@app.delete('/vis/{vis_id}/')
+@app.delete('/api/vis/{vis_id}/')
 async def vis_remove(
     vis_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -178,7 +198,7 @@ async def vis_remove(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put('/vis/{vis_id}/share/')
+@app.put('/api/vis/{vis_id}/share/')
 async def vis_share(
     vis_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -198,7 +218,7 @@ async def vis_share(
     return Response()
 
 
-@app.delete('/vis/{vis_id}/share/')
+@app.delete('/api/vis/{vis_id}/share/')
 async def vis_unshare(
     vis_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
